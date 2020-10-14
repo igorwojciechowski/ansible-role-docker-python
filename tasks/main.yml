@@ -1,0 +1,39 @@
+- name: Create docker_python directory
+  file:
+    path: "{{ user_home }}/docker/docker_python"
+    owner: "{{ user_name }}"
+    group: docker
+    mode: 0550
+    state: directory
+
+- name: Copy Dockerfile
+  template:
+    src: ./Dockerfile.j2
+    dest: "{{ user_home }}/docker/docker_python/Dockerfile"
+    owner: "{{ user_name }}"
+    group: docker
+    mode: 0550
+
+- name: Create sites-enabled directory
+  file:
+    path: "{{ user_home }}/docker/docker_python/etc/nginx/sites-enabled"
+    owner: "{{ user_name }}"
+    group: docker
+    mode: 0550
+    state: directory
+
+- name: Copy site conf
+  template:
+    src: "./etc/nginx/sites-enabled/{{ domain }}.conf.j2"
+    dest: "{{ user_home }}/docker/docker_python/etc/nginx/sites-enabled/{{ domain }}.conf"
+    owner: "{{ user_name }}"
+    group: docker
+    mode: 0550
+
+- name: Create python app directory
+  file:
+    path: "{{ python_app_dir }}"
+    owner: "{{ user_name }}"
+    group: docker
+    mode: 0750
+    state: directory
