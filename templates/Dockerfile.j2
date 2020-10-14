@@ -23,9 +23,9 @@ RUN openssl req -x509 \
 RUN groupadd --gid {{ group_gid }} {{ user_group }}
 RUN useradd {{ user_name }} -m --uid {{ user_uid }} -g {{ user_group }} -p $(openssl passwd -crypt {{ user_password }}) -s /bin/bash
 
-WORKDIR {{ backend_root_dir }}
+WORKDIR {{ python_app_dir }}
 
-COPY .{{ backend_root_dir }}requirements.txt .
+COPY .{{ python_app_dir }}requirements.txt .
 
 USER {{ user_name }}
 
@@ -36,4 +36,4 @@ RUN . {{ user_home }}/venv/bin/activate && pip install -r requirements.txt
 
 EXPOSE 9000
 
-CMD ["{{ user_home }}/venv/bin/gunicorn", "-b", "0.0.0.0:9000", "-w", "3", "{{ django_app }}.wsgi:application"]
+CMD ["{{ user_home }}/venv/bin/gunicorn", "-b", "0.0.0.0:9000", "-w", "3", "{{ python_app }}.wsgi:application"]
