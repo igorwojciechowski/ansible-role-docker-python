@@ -1,7 +1,7 @@
 - name: Create docker_python directory
   file:
-    path: "{{ user_home }}/docker/docker_python"
-    owner: "{{ user_name }}"
+    path: "{{ user.home }}/docker/docker_python"
+    owner: "{{ user.name }}"
     group: docker
     mode: 0550
     state: directory
@@ -9,31 +9,58 @@
 - name: Copy Dockerfile
   template:
     src: ./Dockerfile.j2
-    dest: "{{ user_home }}/docker/docker_python/Dockerfile"
-    owner: "{{ user_name }}"
+    dest: "{{ user.home }}/docker/docker_python/Dockerfile"
+    owner: "{{ user.name }}"
     group: docker
     mode: 0550
 
-- name: Create sites-enabled directory
+- name: Create etc directories
   file:
-    path: "{{ user_home }}/docker/docker_python/etc/nginx/sites-enabled"
-    owner: "{{ user_name }}"
+    path: "{{ item }}"
+    owner: "{{ user.name }}"
     group: docker
     mode: 0550
     state: directory
+  with_items:
+    - "{{ dir.shared.sites_enabled }}"
+    - "{{ dir.shared.certs }}"
+    - "{{ dir.shared.private }}"
 
 - name: Copy site conf
   template:
-    src: "./etc/nginx/sites-enabled/{{ domain }}.conf.j2"
-    dest: "{{ user_home }}/docker/docker_python/etc/nginx/sites-enabled/{{ domain }}.conf"
-    owner: "{{ user_name }}"
+    src: "./etc/nginx/sites-enabled/python.webdev.conf.j2"
+    dest: "{{ dir.shared.sites_enabled }}/{{ domains.python_app }}.conf"
+    owner: "{{ user.name }}"
     group: docker
     mode: 0550
 
+- name: Generate an OpenSSL private key.
+  openssl_privatekey:
+    path: "{{ dir.shared.private }}/{{ domains.python_app }}.key"
+  notify:
+    - Chown private
+
+- name: Generate an OpenSSL CSR.
+  openssl_csr:
+    path: "{{ dir.shared.private }}/{{ domains.python_app }}.csr"
+    privatekey_path: "{{ dir.shared.private }}/{{ domains.python_app }}.key"
+    common_name: "{{ domains.python_app }}"
+  notify:
+    - Chown private
+
+- name: Create openssl certificate
+  openssl_certificate:
+    path: "{{ dir.shared.certs }}/{{ domains.python_app }}.crt"
+    privatekey_path: "{{ dir.shared.private }}/{{ domains.python_app }}.key"
+    csr_path: "{{ dir.shared.private }}/{{ domains.php_app }}.csr"
+    provider: selfsigned
+  notify:
+    - Chown certs
+
 - name: Create python app directory
   file:
-    path: "{{ python_app_dir }}"
-    owner: "{{ user_name }}"
+    path: "{{ dir.python_app }}"
+    owner: "{{ user.name }}"
     group: docker
     mode: 0750
     state: directory

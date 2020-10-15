@@ -6,34 +6,20 @@ RUN apt-get update
 RUN apt-get install bash \
                     openssl
 
-RUN mkdir -p /etc/nginx/sites-enabled/
-COPY ./etc/nginx/sites-enabled/python.webdev.conf /etc/nginx/sites-enabled/{{ domain }}.conf
+RUN groupadd --gid {{ user.gid }} {{ user.group }}
+RUN useradd {{ user.name }} -m --uid {{ user.uid }} -g {{ user.group }} -p $(openssl passwd -crypt {{ user.password }}) -s /bin/bash
 
-RUN mkdir -p /etc/ssl/certs/
-RUN mkdir -p /etc/ssl/private/
-RUN openssl req -x509 \
-                -nodes \
-                -days 365 \
-                -newkey rsa:2048 \
-                -keyout /etc/ssl/private/{{ domain }}.key \
-                -out /etc/ssl/certs/{{ domain }}.crt \
-                -subj "/CN=Webdev/C=WD/ST=Webdev/L=Webdev/O=Webdev/OU=Webdev/"
+WORKDIR {{ dir.python_app }}
 
+COPY .{{ dir.python_app }}/requirements.txt .
 
-RUN groupadd --gid {{ group_gid }} {{ user_group }}
-RUN useradd {{ user_name }} -m --uid {{ user_uid }} -g {{ user_group }} -p $(openssl passwd -crypt {{ user_password }}) -s /bin/bash
-
-WORKDIR {{ python_app_dir }}
-
-COPY .{{ python_app_dir }}requirements.txt .
-
-USER {{ user_name }}
+USER {{ user.name }}
 
 RUN pip install virtualenv
-RUN python -m virtualenv {{ user_home }}/venv
-RUN . {{ user_home }}/venv/bin/activate && pip install gunicorn
-RUN . {{ user_home }}/venv/bin/activate && pip install -r requirements.txt
+RUN python -m virtualenv {{ user.home }}/venv
+RUN . {{ user.home }}/venv/bin/activate && pip install gunicorn
+RUN . {{ user.home }}/venv/bin/activate && pip install -r requirements.txt
 
 EXPOSE 9000
 
-CMD ["{{ user_home }}/venv/bin/gunicorn", "-b", "0.0.0.0:9000", "-w", "3", "{{ python_app }}.wsgi:application"]
+CMD ["{{ user.home }}/venv/bin/gunicorn", "-b", "0.0.0.0:9000", "-w", "3", "{{ app_names.python_app }}.wsgi:application"]

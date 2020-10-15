@@ -1,0 +1,17 @@
+- name: Chown certs
+  file:
+    path: "{{ dir.shared.certs }}"
+    owner: "{{ user.name }}"
+    group: docker
+    mode: 0550
+    state: directory
+    recurse: yes
+
+- name: Chown private
+  file:
+    path: "{{ dir.shared.private }}"
+    owner: "{{ user.name }}"
+    group: docker
+    mode: 0550
+    state: directory
+    recurse: yes
