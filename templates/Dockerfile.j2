@@ -22,4 +22,6 @@ RUN . {{ user.home }}/venv/bin/activate && pip install -r requirements.txt
 
 EXPOSE 9000
 
+USER {{ user.name }}
+
 CMD ["{{ user.home }}/venv/bin/gunicorn", "-b", "0.0.0.0:9000", "-w", "3", "{{ app_names.python_app }}.wsgi:application"]

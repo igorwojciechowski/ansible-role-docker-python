@@ -1,10 +1,13 @@
-- name: Create docker_python directory
+- name: Create docker_python directories
   file:
-    path: "{{ user.home }}/docker/docker_python"
+    path: "{{ item }}"
     owner: "{{ user.name }}"
     group: docker
-    mode: 0550
+    mode: 0750
     state: directory
+  with_items:
+    - "{{ user.home }}/docker/docker_python"
+    - "{{ user.home }}/docker/docker_python{{ dir.python_app }}"
 
 - name: Copy Dockerfile
   template:
